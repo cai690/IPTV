@@ -1,4 +1,148 @@
-虎牙.电影（公网）,#genre#
+央视,#genre#
+CCTV1港澳版,https://cdn6.cc.cd/163189/cctv1
+CCTV1,https://php.jdshipin.com/TVOD/iptv.php?id=cctv1
+CCTV2,https://php.jdshipin.com/TVOD/iptv.php?id=cctv2
+CCTV3,https://php.jdshipin.com/TVOD/iptv.php?id=cctv3
+CCTV4,https://php.jdshipin.com/TVOD/iptv.php?id=cctv4
+CCTV5,https://168.sryze.cc/163189/cctv5
+CCTV5,https://168.sryze.cc/163189/cctv5-2
+CCTV5+,https://php.jdshipin.com/TVOD/iptv.php?id=cctv5p
+CCTV5+,https://168.sryze.cc/163189/cctv5p-2
+CCTV6,https://php.jdshipin.com/TVOD/iptv.php?id=cctv6
+CCTV7,https://php.jdshipin.com/TVOD/iptv.php?id=cctv7
+CCTV8,https://php.jdshipin.com/TVOD/iptv.php?id=cctv8
+CCTV9,https://php.jdshipin.com/TVOD/iptv.php?id=cctv9
+CCTV10,https://php.jdshipin.com/TVOD/iptv.php?id=cctv10
+CCTV11,https://php.jdshipin.com/TVOD/iptv.php?id=cctv11
+CCTV12,https://php.jdshipin.com/TVOD/iptv.php?id=cctv12
+CCTV13,https://php.jdshipin.com/TVOD/iptv.php?id=cctv13
+CCTV13,https://10.fast.hidns.vip/163189/cctv13/
+CCTV14,https://php.jdshipin.com/TVOD/iptv.php?id=cctv14
+CCTV15,https://php.jdshipin.com/TVOD/iptv.php?id=cctv15
+CCTV16,https://php.jdshipin.com/TVOD/iptv.php?id=cctv16
+CCTV16,https://168.sryze.cc/163189/cctv16-2
+CCTV17,https://php.jdshipin.com/TVOD/iptv.php?id=cctv17
+内地,#genre#
+重温经典,https://cdn6.cc.cd/163189/cwjd
+广东珠江,https://2.fast.hidns.vip/163189/gdzj
+广东体育,https://2.fast.hidns.vip/163189/gdty
+海峡卫视,https://10.fast.hidns.vip/163189/hxws/
+海峡卫视,https://168.sryze.cc/163189/hxws
+爱奇艺,https://cdn3.indevs.in/stream/live/iqiyi/
+重温经典,https://168.sryze.cc/163189/cwjd
+广州综合,https://168.sryze.cc/163189/gzzh
+广州新闻,https://168.sryze.cc/163189/gzxw
+广州南国都市,https://cdn15.163189.xyz/163189/ngds
+五星体育,https://cdn15.163189.xyz/163189/wxty
+咪咕4K(限移动网络),http://r.jdshipin.com/ln4xk
+咪咕4K-2(限移动网络),http://r.jdshipin.com/Lqdwf
+香港,#genre#
+翡翠台4K(字幕),https://cdn3.indevs.in/stream/tvb/fct4k/
+凤凰中文,https://cdn6.cc.cd/163189/fhzw
+TVB Plus(字幕),https://cdn3.indevs.in/stream/tvb/tvbp/
+HOY TV,https://cdn6.cc.cd/163189/hoy
+HOY TV,https://fast.hidns.vip/163189/hoy
+HOY资讯台,https://fast.hidns.vip/163189/hoy78
+HOY国际财经台,https://cdn11.163189.xyz/163189/hoy76
+ViuTV,https://10.fast.hidns.vip/163189/viu/
+ViuTVsix,https://10.fast.hidns.vip/163189/viu6/
+NOW新闻台,https://fast.hidns.vip/163189/now
+RTHK31,https://fast.hidns.vip/163189/rthk31
+RTHK32,https://fast.hidns.vip/163189/rthk32
+凤凰资讯,https://cdn6.cc.cd/163189/fhzx
+凤凰香港,https://cdn6.cc.cd/163189/fhhk
+TVB1,https://cdn6.cc.cd/163189/tvb1
+TVBJ1,https://cdn6.cc.cd/163189/j1
+翡翠剧集台,https://cdn6.cc.cd/163189/tvbd
+翡翠台,https://cdn6.cc.cd/163189/fct
+翡翠台(字幕),https://cdn3.indevs.in/stream/tvb/fct/
+明珠台(字幕),https://cdn3.indevs.in/stream/tvb/mzt/
+无线新闻台,https://cdn6.cc.cd/163189/wxxw
+华丽翡翠台,https://cdn6.cc.cd/163189/hlfct
+TVB亚洲武侠,https://cdn6.cc.cd/163189/yzwx
+TVB娱乐新闻台,https://cdn6.cc.cd/163189/ylxw
+无线新闻台,https://cdn6.cc.cd/163189/wxxwt
+TVB星河,https://cdn6.cc.cd/163189/tvbxh
+TVB星河,https://10.fast.hidns.vip/163189/xinghe/
+天映经典,https://10.fast.hidns.vip/163189/ccm/
+华丽翡翠台,https://cdn3.indevs.in/stream/live/hlt/
+华丽翡翠台(硬字幕),https://cdn6.cc.cd/163189/jade
+天映频道,https://cdn3.indevs.in/stream/live/typd/
+天映经典,https://cdn3.indevs.in/stream/live/ccm/
+TVB星河,https://cdn3.indevs.in/stream/live/tvbxh/
+千禧经典台,https://cdn3.indevs.in/stream/live/tvbc/
+翡翠台(WebVTT字幕),https://10.fast.hidns.vip/163189/fct/
+明珠台(WebVTT字幕),https://10.fast.hidns.vip/163189/mzt/
+TVB Plus(WebVTT字幕),https://10.fast.hidns.vip/163189/tvbp/
+黄金华剧台(WebVTT字幕),https://10.fast.hidns.vip/163189/hjhjt/
+TVB Plus,https://smt.1678520.xyz/163189/tvbp
+澳门,#genre#
+澳视澳门,https://cdn6.cc.cd/163189/asam
+澳视卫星,https://cdn6.cc.cd/163189/as
+澳门体育,https://cdn6.cc.cd/163189/amty
+澳门综艺,https://cdn6.cc.cd/163189/amzy
+澳门莲花,https://cdn6.cc.cd/163189/amlh
+台湾,#genre#
+龙华电影,https://8.fast.hidns.vip/163189/lhdy
+龙华经典,https://8.fast.hidns.vip/163189/lhjd
+龙华偶像,https://8.fast.hidns.vip/163189/lhox
+龙华日韩,https://8.fast.hidns.vip/163189/lhrh
+龙华戏剧,https://8.fast.hidns.vip/163189/lhxj
+龙华洋片,https://8.fast.hidns.vip/163189/lhyp
+龙华卡通,https://8.fast.hidns.vip/163189/lhkt
+金光布袋戏,https://cdn3.indevs.in/stream/live/jgbdx/
+民视影剧台,https://cdn12.178.indevs.in/163189/msyj
+公视戏剧,https://cdn12.178.indevs.in/163189/gsxj
+采昌影剧台,https://cdn12.178.indevs.in/163189/ccyj
+靖天映画,https://cdn12.178.indevs.in/163189/jtyh
+靖天戏剧台,https://cdn12.178.indevs.in/163189/jtxj
+靖天电影台,https://cdn12.178.indevs.in/163189/jtdy
+靖洋戏剧台,https://cdn12.178.indevs.in/163189/jyxj
+影迷数位电影台,https://cdn12.178.indevs.in/163189/ymswdyt
+金光布袋戏,https://cdn12.178.indevs.in/163189/jgbdx
+客家好劇-FastTV飛速看,https://4g.158.qzz.io/163189/kjhj
+懷舊經典電影-FastTV飛速看,https://4g.158.qzz.io/163189/hjjddy
+精選華語電影-FastTV飛速看,https://4g.158.qzz.io/163189/jxhydy
+國外電影精選-FastTV飛速看,https://4g.158.qzz.io/163189/gwdyjx
+日韓電影大賞-FastTV飛速看,https://4g.158.qzz.io/163189/rhdyds
+台灣傳奇-FastTV飛速看,https://4g.158.qzz.io/163189/twcq
+精彩陸劇1台-FastTV飛速看,https://4g.158.qzz.io/163189/jclj1
+精彩陸劇2台-FastTV飛速看,https://4g.158.qzz.io/163189/jclj2
+金光布袋戲-FastTV飛速看,https://4g.158.qzz.io/163189/jgbdxfsk
+哆啦A夢-FastTV飛速看,https://4g.158.qzz.io/163189/dlam
+經典卡通-FastTV飛速看,https://4g.158.qzz.io/163189/dlam
+經典迪士尼-FastTV飛速看,https://4g.158.qzz.io/163189/jddsn
+東離劍遊紀-FastTV飛速看,https://4g.158.qzz.io/163189/dljyj
+纬来电影台,https://smt.1678520.xyz/163189/wldy
+纬来戏剧台,https://smt.1678520.xyz/163189/wlxj
+纬来体育台,https://smt.1678520.xyz/163189/wlty
+龙祥时代,https://smt.1678520.xyz/163189/lxsd
+东森电影,https://smt.1678520.xyz/163189/dsdy
+东森戏剧,https://smt.1678520.xyz/163189/dsxj
+东森洋片,https://smt.1678520.xyz/163189/dsyp
+新加坡,#genre#
+CH5,https://cdn6.cc.cd/163189/ch5
+CH8,https://cdn6.cc.cd/163189/ch8
+CHU,https://cdn6.cc.cd/163189/chu
+天映新加坡,https://10.fast.hidns.vip/163189/typd/
+华丽翡翠台(新加坡),https://cdn3.indevs.in/stream/live/jade/
+马来西亚,#genre#
+八度空间,https://cdn6.cc.cd/163189/8tv
+Astro AOD,https://cdn3.indevs.in/stream/live/aod/
+Astro AEC,https://cdn3.indevs.in/stream/live/aec/
+Astro QJ,https://cdn3.indevs.in/stream/live/qj/
+Astro欢喜台,https://cdn3.indevs.in/stream/live/hxt/
+国际,#genre#
+amc电影台,https://cdn12.178.indevs.in/163189/amc
+CinemaWorld,https://cdn12.178.indevs.in/163189/cinemaworld
+My Cinema Europe,https://cdn12.178.indevs.in/163189/mce
+经典电影台,https://cdn12.178.indevs.in/163189/jddyt
+CMusic,https://cdn12.178.indevs.in/163189/cmusic
+DreamWorks梦工厂动画,https://cdn12.178.indevs.in/163189/dreamworks
+精选动漫台,https://cdn12.178.indevs.in/163189/jxdmt
+
+
+虎牙.电影,#genre#
 
 007电影,http://43.136.68.106:35455/huya/21059585
 洪金宝,http://43.136.68.106:35455/huya/11279251
@@ -527,7 +671,7 @@ you鱼游戏 来看看到底烂尾没,http://43.136.68.106:35455/huya/20969128
 火影人物志,http://43.136.68.106:35455/huya/20236200
 
 
-虎牙.综艺（公网）,#genre#
+虎牙.综艺,#genre#
 
 跑男1-4季，gogogo出发咯~,http://43.136.68.106:35455/huya/29465875
 爆笑综艺[五哈]1-4季来了~,http://43.136.68.106:35455/huya/30080247
@@ -578,7 +722,7 @@ RM 刘在石李光洙跑男,http://43.136.68.106:35455/huya/11336725
 [高能少年团1-2] 王俊凯刘昊然对抗挑战,http://43.136.68.106:35455/huya/29982609
 
 
-虎牙.动漫（公网）,#genre#
+虎牙.动漫,#genre#
 
 童年经典·蜡笔小新欢乐多,http://43.136.68.106:35455/huya/11352970
 【海绵宝宝】黄方块的爆笑生活~,http://43.136.68.106:35455/huya/11352919
@@ -702,7 +846,7 @@ Tong灵王 童年回忆,http://43.136.68.106:35455/huya/20969112
 超自然武装当哒当 和美女组队打怪,http://43.136.68.106:35455/huya/20985850
 豆瓣 9.4 分封神！《虫师》冷门宝藏动漫,http://43.136.68.106:35455/huya/21241791
 
-斗鱼直播（公网）,#genre#
+斗鱼直播,#genre#
 橙記Orange丶,http://43.136.68.106:35455/douyu/4549169
  baby丶贝贝,http://43.136.68.106:35455/douyu/431460
  奇光主播,http://43.136.68.106:35455/douyu/8009547
@@ -1614,7 +1758,7 @@ Tong灵王 童年回忆,http://43.136.68.106:35455/huya/20969112
  只想中奖噢,http://43.136.68.106:35455/douyu/8357389
  动漫唯美風,http://43.136.68.106:35455/douyu/8912038
 
-YY电影（公网）,#genre#
+YY电影,#genre#
 史诗级科幻电影-阿凡达,http://43.136.68.106:35455/yy/1382735577
 弹幕天团 下饭神剧,http://43.136.68.106:35455/yy/23512910
 超精彩武打场景,http://43.136.68.106:35455/yy/1354936131
@@ -2133,7 +2277,7 @@ YY用户,http://43.136.68.106:35455/yy/1382745098
 外星人入侵,http://43.136.68.106:35455/yy/1382745181
 在悬崖边缘狂舞,http://43.136.68.106:35455/yy/1382749910
 雷霆再起,http://43.136.68.106:35455/yy/1382736884
-YY动漫（公网）,#genre#
+YY动漫,#genre#
 进来 陪你看动漫,http://43.136.68.106:35455/yy/1352866135
 国漫动漫,http://43.136.68.106:35455/yy/1354768828
 动漫,http://43.136.68.106:35455/yy/1354143938
