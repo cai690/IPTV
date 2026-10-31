@@ -9,6 +9,8 @@ import time
 import uuid
 from urllib.parse import parse_qsl, quote, unquote, urlencode, urlsplit
 
+from lxml import etree
+
 from base.spider import Spider as BaseSpider
 
 DOUYU = "https://www.douyu.com"
@@ -124,9 +126,6 @@ def _huya_url(stream):
 
 
 class Spider(BaseSpider):
-
-    def getName(self):
-        return "直播"
 
     def getDependence(self):
         return ["game_live_protocol", "game_live_stream"]
@@ -311,7 +310,8 @@ class Spider(BaseSpider):
             response = self.net.req(HUYA + ("/g_" + group if group else "/g"), {"headers": _headers(platform)})
             if response.get("error") or response["code"] != 200:
                 raise ValueError("虎牙分類載入失敗：" + str(response.get("error") or response["code"]))
-            items = self.html(response["content"]).xpath(
+            root = etree.HTML(response["content"])
+            items = [] if root is None else root.xpath(
                 "//li[contains(concat(' ', normalize-space(@class), ' '), ' g-gameCard-item ')][@data-gid]")
             if not items:
                 raise ValueError("虎牙分類頁沒有取得資料")
@@ -435,7 +435,13 @@ class Spider(BaseSpider):
         ], current, 20, data["numFound"])
 
     def detailContent(self, ids):
-        room = _room_id(ids[0])
+        if not ids:
+            return {"list": []}
+        responses = [self._detail(video_id) for video_id in ids]
+        return {**responses[0], "list": [item for response in responses for item in response["list"]]}
+
+    def _detail(self, video_id):
+        room = _room_id(video_id)
         platform, id = room["platform"], room["id"]
         if platform == "douyu":
             data = self._douyu("https://open.douyucdn.cn/api/RoomApi/room/" + id)
@@ -488,7 +494,7 @@ class Spider(BaseSpider):
         url = self._douyu_url(id)
         format = "application/x-mpegURL" if urlsplit(url).path.endswith(".m3u8") else "video/x-flv"
         if format == "video/x-flv":
-            url = self.getProxyUrl({"live": "douyu:" + id})
+            url = self.proxyUrl({"live": "douyu:" + id})
         return {"parse": 0, "url": url, "header": _headers("douyu"), "format": format}
 
     def _replay_info(self, id):
@@ -515,7 +521,7 @@ class Spider(BaseSpider):
         try:
             info = self._replay_info(id)
             if info["show"] == 1:
-                url = self.getProxyUrl({"replay": "douyu:" + id, "time": "{time}"})
+                url = self.proxyUrl({"replay": "douyu:" + id, "time": "{time}"})
                 return {"url": url, "start": info["start"], "window": info["window"]}
         except Exception:
             self.log("斗魚回看資料暫時無法取得，保留直播播放")
@@ -599,10 +605,10 @@ class Spider(BaseSpider):
         else:
             result = self._huya_live(room["id"])
         result["position"] = 0
-        result["danmaku"] = [{"name": "即時彈幕", "url": self.getDanmakuUrl(id)}]
+        result["danmaku"] = [{"name": "即時彈幕", "url": self.danmakuUrl(id)}]
         return result
 
-    def localProxy(self, params):
+    def proxy(self, params):
         if params.get("replay"):
             room = _room_id(params["replay"])
             if room["platform"] != "douyu":
