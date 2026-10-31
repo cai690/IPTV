@@ -1,3 +1,5 @@
+import {net} from "catvod";
+
 export async function* flvStream(open) {
     const timeline = {started: false, last: -1};
     const delays = [500, 1000, 2000];
