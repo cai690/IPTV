@@ -1,3 +1,4 @@
+import {Spider, htmlQuery, md5X} from "catvod";
 import {subscribe} from "./game_live_protocol.js";
 import {flvStream} from "./game_live_stream.js";
 
@@ -14,65 +15,68 @@ const HUYA_GROUPS = [
     {id: "sy", name: "手遊休閒", game: "100004"},
 ];
 
-export default function() {
-    let deviceId;
+export default class GameLive extends Spider {
 
-    function init() {
-        deviceId = crypto.randomUUID().replaceAll("-", "");
+    init() {
+        this.deviceId = uuid();
     }
 
-    async function home(filter) {
+    async homeContent(filter) {
         const result = {class: Object.entries(NAMES).map(([id, name]) => ({type_id: id, type_name: name, land: 1, ratio: 1.78}))};
-        if (filter) result.filters = Object.fromEntries(await net.map(Object.keys(NAMES), async id => [id, await filters(id)]));
+        if (filter) result.filters = Object.fromEntries(await this.net.map(Object.keys(NAMES), async id => [id, await this.filters(id)]));
         return result;
     }
 
-    async function filters(platform) {
-        const items = await groups(platform);
+    async filters(platform) {
+        const items = await this.groups(platform);
         return [
             {key: "view", name: "顯示", init: "live", value: [{n: "直播", v: "live"}, {n: "分類", v: "games"}]},
             {key: "group", name: "分區", value: [{n: "全部", v: ""}, ...items.map(item => ({n: item.name, v: item.id}))]},
         ];
     }
 
-    async function douyu(url, options = {}) {
-        const result = await net.json(url, {...options, headers: {...headers("douyu"), ...options.headers}});
+    async homeVideoContent() {
+        return {list: []};
+    }
+
+    async douyu(url, options = {}) {
+        const result = await this.net.json(url, {...options, headers: {...headers("douyu"), ...options.headers}});
         const code = result.error ?? result.code;
         if (!douyuSuccess(code)) throw new Error("斗魚：" + (result.msg || "接口回應錯誤"));
         if (result.data == null) throw new Error("斗魚接口缺少資料");
         return result.data;
     }
 
-    async function huyaRoom(id) {
-        return net.cached(`room:huya:${id}`, {ttl: 5000, stale: false}, async () => {
-            const result = await net.json("https://mp.huya.com/cache.php", {params: {m: "Live", do: "profileRoom", roomid: id}, headers: headers("huya")});
+    async huyaRoom(id) {
+        return this.net.cached(`room:huya:${id}`, {ttl: 5000, stale: false}, async () => {
+            const result = await this.net.json("https://mp.huya.com/cache.php", {params: {m: "Live", do: "profileRoom", roomid: id}, headers: headers("huya")});
             if (result.status !== 200 || !result.data?.profileInfo) throw new Error("虎牙：" + (result.message || "房間不存在"));
             return result.data;
         });
     }
 
-    async function groups(platform) {
+    async groups(platform) {
         if (platform === "huya") return HUYA_GROUPS;
-        if (platform === "yy") return net.cached("groups:yy", {ttl: 86400000, persist: true}, yyGroups);
-        return net.cached("groups:douyu", {ttl: 86400000, persist: true}, async () => {
-            const items = await douyu(DOUYU + "/japi/weblist/api/getC1List");
+        if (platform === "yy") return this.net.cached("groups:yy", {ttl: 86400000, persist: true}, () => this.yyGroups());
+        return this.net.cached("groups:douyu", {ttl: 86400000, persist: true}, async () => {
+            const items = await this.douyu(DOUYU + "/japi/weblist/api/getC1List");
             if (!Array.isArray(items) || !items.length) throw new Error("斗魚主分類格式錯誤");
             return items.map(item => ({id: String(item.cid1), name: item.cname1}));
         });
     }
 
-    async function games(platform, group = "") {
+    async games(platform, group = "") {
         if (platform === "yy") {
-            const items = await groups(platform);
+            const items = await this.groups(platform);
             return group ? items.filter(item => item.id === group) : items;
         }
-        const items = await net.cached(`catalog:${platform}:${platform === "huya" ? group : ""}`, {ttl: 86400000, persist: true}, async () => {
+        const items = await this.net.cached(`catalog:${platform}:${platform === "huya" ? group : ""}`, {ttl: 86400000, persist: true}, async () => {
             if (platform === "douyu") {
-                const items = await douyu(DOUYU + "/api/v1/getColumnDetail");
+                const items = await this.douyu(DOUYU + "/api/v1/getColumnDetail");
                 if (!Array.isArray(items)) throw new Error("斗魚分類格式錯誤");
                 return items.filter(item => item.is_del === "0" && item.is_hidden === "0").map(item => ({id: String(item.tag_id), group: String(item.cate_id), name: item.tag_name, pic: item.pic_url || item.pic_name}));
             }
-            const response = await net.http(HUYA + (group ? "/g_" + group : "/g"), {headers: headers(platform)});
+            const response = await this.net.req(HUYA + (group ? "/g_" + group : "/g"), {headers: headers(platform)});
             if (response.error || response.code !== 200) throw new Error("虎牙分類載入失敗：" + (response.error || response.code));
             const result = htmlQuery(response.content, {queries: {games: {selector: "li.g-gameCard-item[data-gid]", fields: {
                 id: {attribute: "data-gid"}, name: {attribute: "title"}, pic: {selector: "img", attribute: "data-original"}, src: {selector: "img", attribute: "src"},
@@ -83,16 +87,16 @@ export default function() {
         return platform === "douyu" && group ? items.filter(item => item.group === group) : items;
     }
 
-    async function category(tid, pg, filter, extend = {}) {
+    async categoryContent(tid, pg, filter, extend = {}) {
         const [platform, kind, value] = tid.split("/");
         if (!NAMES[platform]) throw new Error("未知直播平台");
         const current = pageNumber(pg);
-        if (kind === "s") return searchRooms(platform, decodeURIComponent(value || ""), current);
+        if (kind === "s") return this.searchRooms(platform, decodeURIComponent(value || ""), current);
         const group = kind === "g" ? "" : extend.group || (kind === "p" ? value : "");
-        const parent = group ? (await groups(platform)).find(item => item.id === group) : null;
+        const parent = group ? (await this.groups(platform)).find(item => item.id === group) : null;
         if (group && !parent) throw new Error("未知直播分區");
         if (kind !== "g" && (extend.view === "games" || (kind === "p" && !extend.view))) {
-            const result = page(group ? await games(platform, group) : await groups(platform), current, 60);
+            const result = page(group ? await this.games(platform, group) : await this.groups(platform), current, 60);
             result.list = result.list.map(item => ({vod_id: `${platform}/${group || platform === "yy" ? "g" : "p"}/${item.id}`, vod_name: item.name, vod_pic: image(item.pic), vod_tag: "folder", style: group ? STYLE : {type: "list"}}));
             return result;
         }
@@ -100,60 +104,66 @@ export default function() {
         if (!/^\d+$/.test(game)) throw new Error("分類編號格式錯誤");
         let directory = game;
         if (platform === "douyu") directory = kind === "g" ? "2_" + game : group ? "1_" + group : "0_0";
-        return net.cached(`list:${platform}:${directory}:${current}`, {ttl: 20000, stale: false}, () => rooms(platform, directory, current));
+        return this.net.cached(`list:${platform}:${directory}:${current}`, {ttl: 20000, stale: false}, () => this.rooms(platform, directory, current));
     }
 
-    async function rooms(platform, game, current) {
-        if (platform === "yy") return yyRooms(game, current);
+    async rooms(platform, game, current) {
+        if (platform === "yy") return this.yyRooms(game, current);
         if (platform === "douyu") {
-            const data = await douyu(`${DOUYU}/gapi/rkc/directory/mixList/${game}/${current}`);
+            const data = await this.douyu(`${DOUYU}/gapi/rkc/directory/mixList/${game}/${current}`);
             if (!Array.isArray(data.rl) || !Number.isInteger(data.pgcnt)) throw new Error("斗魚直播列表格式錯誤");
             return {list: data.rl.map(item => card(platform, item.rid, item.rn, item.rs16 || item.rs1, item.nn)), page: current, pagecount: Math.max(1, data.pgcnt), limit: 120};
         }
-        const result = await net.json(HUYA + "/cache.php", {params: {m: "LiveList", do: "getLiveListByPage", gameId: game, tagAll: 0, page: current}, headers: headers("huya")});
+        const result = await this.net.json(HUYA + "/cache.php", {params: {m: "LiveList", do: "getLiveListByPage", gameId: game, tagAll: 0, page: current}, headers: headers("huya")});
         const data = result.data;
         if (result.status !== 200 || !Array.isArray(data?.datas) || !Number.isInteger(data.totalPage)) throw new Error("虎牙直播列表格式錯誤");
         return {list: data.datas.map(item => card(platform, item.profileRoom, item.introduction || item.roomName || item.nick, item.screenshot, item.nick)), page: current, pagecount: Math.max(1, data.totalPage), limit: data.pageSize, total: data.totalCount};
     }
 
-    function search(key, quick, pg = "1") {
+    async searchContent(key, quick, pg = "1") {
         const current = pageNumber(pg);
         const keyword = String(key).trim();
         return page(Object.entries(NAMES).map(([platform, name]) => ({vod_id: `${platform}/s/${encodeURIComponent(keyword)}`, vod_name: `${name}：${keyword}`, vod_remarks: "搜尋主播或房間編號", vod_tag: "folder", style: {type: "list"}})), current, Object.keys(NAMES).length);
     }
 
-    async function searchRooms(platform, keyword, current) {
+    async searchRooms(platform, keyword, current) {
         if (/^[0-9]+$/.test(keyword)) {
             if (current !== 1) return {list: [], page: current, pagecount: 1, limit: 1};
-            const result = await detail(`${platform}:${keyword}`);
+            const result = await this.detailItem(`${platform}:${keyword}`);
             return {list: result.list.map(item => ({...item, style: STYLE})), page: 1, pagecount: 1, limit: 1};
         }
-        if (platform === "yy") return yySearch(keyword, current);
+        if (platform === "yy") return this.yySearch(keyword, current);
         if (platform === "douyu") {
-            const data = await douyu(DOUYU + "/japi/search/api/searchShow", {params: {kw: keyword, page: current, pageSize: 20}});
+            const data = await this.douyu(DOUYU + "/japi/search/api/searchShow", {params: {kw: keyword, page: current, pageSize: 20}});
             if (!Array.isArray(data.relateShow) || !Number.isInteger(data.total)) throw new Error("斗魚搜尋回應格式錯誤");
             return page(data.relateShow.map(item => card(platform, item.rid, item.roomName, item.roomSrc, item.nickName)), current, 20, data.total);
         }
-        const result = await net.json("https://search.cdn.huya.com/", {params: {m: "Search", do: "getSearchContent", q: keyword, typ: -5, rows: 20, start: (current - 1) * 20, v: 4}, headers: headers("huya")});
+        const result = await this.net.json("https://search.cdn.huya.com/", {params: {m: "Search", do: "getSearchContent", q: keyword, typ: -5, rows: 20, start: (current - 1) * 20, v: 4}, headers: headers("huya")});
         const data = result.response?.["1"];
         if (result.responseHeader?.status !== 0 || !Array.isArray(data?.docs) || !Number.isInteger(data.numFound)) throw new Error("虎牙搜尋回應格式錯誤");
         const items = data.docs.map(item => card(platform, item.room_id, item.live_intro || item.game_nick, item.game_avatarUrl180, item.game_nick + (item.gameLiveOn ? "" : " · 未開播")));
         return page(items, current, 20, data.numFound);
     }
 
-    async function detail(id) {
+    async detailContent(ids) {
+        if (!ids.length) return {list: []};
+        const responses = await this.net.map(ids, this.detailItem, 4);
+        return {...responses[0], list: responses.flatMap(response => response.list)};
+    }
+
+    async detailItem(id) {
         const room = roomId(id);
         let vod;
         if (room.platform === "douyu") {
-            const data = await douyu("https://open.douyucdn.cn/api/RoomApi/room/" + room.id);
+            const data = await this.douyu("https://open.douyucdn.cn/api/RoomApi/room/" + room.id);
             vod = card(room.platform, data.room_id, data.room_name, data.room_thumb, data.owner_name);
             vod.vod_content = [data.cate_name, data.owner_name, data.room_status === "1" ? "直播中" : "未開播"].filter(Boolean).join(" · ");
         } else if (room.platform === "yy") {
-            const data = await yyRoom(room.id);
+            const data = await this.yyRoom(room.id);
             vod = yyCard(data);
             vod.vod_content = [data.biz, data.name, "直播中"].filter(Boolean).join(" · ");
         } else {
-            const data = await huyaRoom(room.id);
+            const data = await this.huyaRoom(room.id);
             const profile = data.profileInfo;
             const live = data.liveData || {};
             vod = card(room.platform, profile.profileRoom, live.introduction || live.roomName || profile.nick, live.screenshot || profile.avatar180, profile.nick);
@@ -164,38 +174,38 @@ export default function() {
         return {list: [vod]};
     }
 
-    function douyuStream(id) {
-        return net.cached(`stream:douyu:${id}`, {ttl: 5000, stale: false}, () => fetchDouyuStream(id));
+    douyuStream(id) {
+        return this.net.cached(`stream:douyu:${id}`, {ttl: 5000, stale: false}, () => this.fetchDouyuStream(id));
     }
 
-    async function fetchDouyuStream(id) {
-        const scripts = await net.cached(`sign:douyu:${id}`, {ttl: 300000, stale: false}, () => douyu(DOUYU + "/swf_api/homeH5Enc", {params: {rids: id}}));
+    async fetchDouyuStream(id) {
+        const scripts = await this.net.cached(`sign:douyu:${id}`, {ttl: 300000, stale: false}, () => this.douyu(DOUYU + "/swf_api/homeH5Enc", {params: {rids: id}}));
         const source = scripts[`room${id}`];
         if (typeof source !== "string" || !source) throw new Error("斗魚播放簽名資料無效");
-        const signed = await js.eval("var CryptoJS = {MD5: md5X};\n" + source + "\nub98484234(rid, did, tt);", {
-            globals: {rid: id, did: deviceId, tt: String(Math.floor(Date.now() / 1000))}
+        const signed = await this.js.eval("var CryptoJS = {MD5: md5X};\n" + source + "\nub98484234(rid, did, tt);", {
+            globals: {rid: id, did: this.deviceId, tt: String(Math.floor(Date.now() / 1000))}
         });
         const params = Object.fromEntries(new URLSearchParams(signed));
-        return douyu(`${DOUYU}/lapi/live/getH5Play/${id}`, {
+        return this.douyu(`${DOUYU}/lapi/live/getH5Play/${id}`, {
             method: "POST", postType: "form", data: {...params, cdn: "", rate: 0},
         });
     }
 
-    async function douyuUrl(id) {
-        const data = await douyuStream(id);
+    async douyuUrl(id) {
+        const data = await this.douyuStream(id);
         if (!data.rtmp_url || !data.rtmp_live) throw new Error("斗魚目前沒有可播放的直播");
         return data.rtmp_url.replace(/\/$/, "") + "/" + data.rtmp_live.replace(/^\//, "");
     }
 
-    async function douyuLiveSource(id) {
-        const url = await douyuUrl(id);
+    async douyuLiveSource(id) {
+        const url = await this.douyuUrl(id);
         const format = new URL(url).pathname.endsWith(".m3u8") ? "application/x-mpegURL" : "video/x-flv";
-        return {parse: 0, url: format === "video/x-flv" ? getProxyUrl({live: "douyu:" + id}) : url, header: headers("douyu"), format};
+        return {parse: 0, url: format === "video/x-flv" ? this.proxyUrl({live: "douyu:" + id}) : url, header: headers("douyu"), format};
     }
 
-    async function douyuReplayInfo(id) {
-        return net.cached(`replay:douyu:${id}`, {ttl: 60000, stale: false}, async () => {
-            const result = await net.json(DOUYU + "/wgapi/live/liveweb/roomapi/biz/getSwitch", {params: {rid: id}, headers: headers("douyu")});
+    async douyuReplayInfo(id) {
+        return this.net.cached(`replay:douyu:${id}`, {ttl: 60000, stale: false}, async () => {
+            const result = await this.net.json(DOUYU + "/wgapi/live/liveweb/roomapi/biz/getSwitch", {params: {rid: id}, headers: headers("douyu")});
             const data = result.data;
             if (!douyuSuccess(result.code) || !data?.playback || !data.roomInfo) throw new Error("斗魚回看資料無效");
             const show = Number(data.playback.show);
@@ -205,34 +215,34 @@ export default function() {
         });
     }
 
-    async function douyuTimeshift(id) {
+    async douyuTimeshift(id) {
         try {
-            const info = await douyuReplayInfo(id);
+            const info = await this.douyuReplayInfo(id);
             if (info.show !== 1) return;
-            return {url: getProxyUrl({replay: "douyu:" + id, time: "{time}"}), start: info.start, window: info.window};
+            return {url: this.proxyUrl({replay: "douyu:" + id, time: "{time}"}), start: info.start, window: info.window};
         } catch (error) {
-            console.log("斗魚回看資料暫時無法取得，保留直播播放");
+            log("斗魚回看資料暫時無法取得，保留直播播放");
         }
     }
 
-    async function douyuReplay(id, value) {
+    async douyuReplay(id, value) {
         if (!/^\d+$/.test(String(value))) throw new Error("回看時間無效");
         const time = Number(value);
-        if (time === 0) return douyuLiveSource(id);
+        if (time === 0) return this.douyuLiveSource(id);
         const now = Date.now();
         if (!Number.isSafeInteger(time) || time <= 0 || time >= now) throw new Error("回看時間無效");
-        const info = await douyuReplayInfo(id);
+        const info = await this.douyuReplayInfo(id);
         if (info.show !== 1) throw new Error("斗魚目前未提供回看");
         const start = Math.max(time, info.start, now - info.window);
-        const data = await douyu(DOUYU + "/japi/universe/playback/getVodStream", {params: {
+        const data = await this.douyu(DOUYU + "/japi/universe/playback/getVodStream", {params: {
             rid: id, startTime: Math.ceil(start / 1000), pt: 2, rate: 0, client_sys: "web", timeshiftReplay: 1, isloopclick: 0,
         }});
         if (typeof data.timeshiftUrl !== "string" || !/^https?:\/\//.test(data.timeshiftUrl)) throw new Error("斗魚沒有回傳回看播放網址");
         return {parse: 0, url: data.timeshiftUrl, header: headers("douyu"), format: "application/x-mpegURL"};
     }
 
-    async function huyaLiveSource(id) {
-        const data = await huyaRoom(id);
+    async huyaLiveSource(id) {
+        const data = await this.huyaRoom(id);
         if (data.realLiveStatus !== "ON") throw new Error("虎牙主播目前未開播");
         const lines = data.stream?.baseSteamInfoList;
         if (!Array.isArray(lines)) throw new Error("虎牙缺少播放線路");
@@ -241,59 +251,59 @@ export default function() {
         return {parse: 0, url: {values, position: 0}, header: headers("huya"), format: "video/x-flv"};
     }
 
-    async function play(flag, id) {
+    async playerContent(flag, id) {
         const room = roomId(id);
         let result;
         if (room.platform === "douyu") {
-            const [source, timeshift] = await net.map([douyuLiveSource, douyuTimeshift], load => load(room.id), 2);
+            const [source, timeshift] = await this.net.map([this.douyuLiveSource, this.douyuTimeshift], load => load(room.id), 2);
             result = source;
             if (timeshift) result.timeshift = timeshift;
         } else if (room.platform === "yy") {
-            result = await yyLiveSource(room.id);
+            result = await this.yyLiveSource(room.id);
         } else {
-            result = await huyaLiveSource(room.id);
+            result = await this.huyaLiveSource(room.id);
         }
         result.position = 0;
-        result.danmaku = [{name: "即時彈幕", url: getDanmakuUrl(id)}];
+        result.danmaku = [{name: "即時彈幕", url: this.danmakuUrl(id)}];
         return result;
     }
 
-    async function proxy(params) {
+    async proxy(params) {
         if (params.replay) {
             const room = roomId(params.replay);
             if (room.platform !== "douyu") throw new Error("此平台目前不提供回看");
-            return [200, "application/json; charset=utf-8", JSON.stringify(await douyuReplay(room.id, params.time)), {"Cache-Control": "no-store"}];
+            return [200, "application/json; charset=utf-8", JSON.stringify(await this.douyuReplay(room.id, params.time)), {"Cache-Control": "no-store"}];
         }
         const room = roomId(params.live);
         if (room.platform !== "douyu") throw new Error("此平台不需要串流續接");
-        await douyuUrl(room.id);
+        await this.douyuUrl(room.id);
         const options = {headers: headers(room.platform), timeout: 15000, callTimeout: 0};
-        async function open() {
-            let url = await douyuUrl(room.id);
-            let reader = await net.openStream(url, options);
+        const open = async () => {
+            let url = await this.douyuUrl(room.id);
+            let reader = await this.net.openStream(url, options);
             if ([401, 403, 404].includes(reader.code)) {
                 reader.close();
-                net.clearCache(`stream:douyu:${room.id}`);
-                url = await douyuUrl(room.id);
-                reader = await net.openStream(url, options);
+                this.net.clearCache(`stream:douyu:${room.id}`);
+                url = await this.douyuUrl(room.id);
+                reader = await this.net.openStream(url, options);
             }
             if (reader.code !== 200) {
                 reader.close();
                 throw new Error("直播串流 HTTP " + reader.code);
             }
             return reader;
-        }
-        const response = await net.stream(flvStream(open));
+        };
+        const response = await this.net.stream(flvStream(open));
         return [200, "video/x-flv", response.stream, {"Cache-Control": "no-store", "Accept-Ranges": "none"}];
     }
 
-    async function danmaku(id, emit) {
+    async danmaku(id, emit) {
         const room = roomId(id);
         if (room.platform === "yy") {
-            const data = await yyRoom(room.id);
+            const data = await this.yyRoom(room.id);
             Object.assign(room, {top: String(data.sid), sub: String(data.ssid)});
         } else if (room.platform === "huya") {
-            const data = await huyaRoom(room.id);
+            const data = await this.huyaRoom(room.id);
             if (data.realLiveStatus !== "ON") throw new Error("虎牙主播目前未開播");
             const stream = data.stream?.baseSteamInfoList?.[0];
             if (!stream) throw new Error("虎牙缺少彈幕房間資料");
@@ -302,20 +312,20 @@ export default function() {
         return subscribe(room.platform, room, emit);
     }
 
-    async function yyGroups() {
-        const result = await net.json(YY + "/yyweb/module/data/header", {headers: headers("yy")});
+    async yyGroups() {
+        const result = await this.net.json(YY + "/yyweb/module/data/header", {headers: headers("yy")});
         if (!Array.isArray(result.categoryTabs) || result.categoryTabs.some(item => !Array.isArray(item.navs))) throw new Error("YY分類格式錯誤");
         const items = result.categoryTabs.flatMap(item => item.navs);
         if (!items.length || items.some(item => !Number.isInteger(item.id) || !item.title || typeof item.url !== "string" || !/^https?:\/\/www\.yy\.com\//.test(item.url))) throw new Error("YY分類資料無效");
         return items.map(item => ({id: String(item.id), game: String(item.id), name: item.title, url: item.url.replace(/^http:/, "https:")}));
     }
 
-    async function yyDirectory(game) {
+    async yyDirectory(game) {
         if (game === "0") return {moduleId: -1, biz: "index", subBiz: "idx"};
-        return net.cached(`directory:yy:${game}`, {ttl: 20000, stale: false}, async () => {
-            const item = (await groups("yy")).find(item => item.id === game);
+        return this.net.cached(`directory:yy:${game}`, {ttl: 20000, stale: false}, async () => {
+            const item = (await this.groups("yy")).find(item => item.id === game);
             if (!item) throw new Error("未知YY分類");
-            const response = await net.http(item.url, {headers: headers("yy")});
+            const response = await this.net.req(item.url, {headers: headers("yy")});
             if (response.error || response.code !== 200) throw new Error("YY分類載入失敗：" + (response.error || response.code));
             const source = /pageBar\s*:\s*\{([^}]+)\}/.exec(response.content)?.[1] || "";
             const total = /\btotalCount\s*:\s*(\d+)/.exec(source);
@@ -329,10 +339,10 @@ export default function() {
         });
     }
 
-    async function yyRooms(game, current) {
-        const directory = await yyDirectory(game);
+    async yyRooms(game, current) {
+        const directory = await this.yyDirectory(game);
         if (directory.total === 0) return page([], current, 60, 0);
-        const result = await net.json(YY + "/more/page.action", {params: {...directory, page: current, pageSize: 60}, headers: headers("yy")});
+        const result = await this.net.json(YY + "/more/page.action", {params: {...directory, page: current, pageSize: 60}, headers: headers("yy")});
         const data = result.data;
         if (result.resultCode !== 0 || !Number.isSafeInteger(data?.totalCount) || data.totalCount < 0) throw new Error("YY直播列表格式錯誤");
         const count = Math.max(1, Math.ceil(data.totalCount / 60));
@@ -341,8 +351,8 @@ export default function() {
         return page(data.data.map(yyCard), current, 60, data.totalCount);
     }
 
-    async function yySearch(keyword, current) {
-        const result = await net.json(YY + "/apiSearch/doSearch.json", {params: {q: keyword, t: 1, n: current, s: 15}, headers: headers("yy")});
+    async yySearch(keyword, current) {
+        const result = await this.net.json(YY + "/apiSearch/doSearch.json", {params: {q: keyword, t: 1, n: current, s: 15}, headers: headers("yy")});
         const data = result.data;
         const response = data?.searchResult?.response?.["1"];
         if (result.success !== true || result.status !== 0 || !Number.isInteger(data?.totalPage) || data.totalPage < 0 || !Array.isArray(response?.docs) || !Number.isSafeInteger(response.numFound) || response.numFound < 0) throw new Error("YY搜尋回應格式錯誤");
@@ -351,18 +361,18 @@ export default function() {
         return {list: items, page: current, pagecount: count, limit: 15, total: response.numFound};
     }
 
-    async function yyRoom(id) {
-        return net.cached(`room:yy:${id}`, {ttl: 5000, stale: false}, async () => {
+    async yyRoom(id) {
+        return this.net.cached(`room:yy:${id}`, {ttl: 5000, stale: false}, async () => {
             let [sid, ssid] = id.split("_");
             if (!ssid) {
-                const response = await net.http(YY + "/" + sid, {headers: headers("yy")});
+                const response = await this.net.req(YY + "/" + sid, {headers: headers("yy")});
                 if (response.error || response.code !== 200) throw new Error("YY房間載入失敗：" + (response.error || response.code));
                 const source = /\bvar\s+pageInfo\s*=\s*\{([\s\S]*?)\r?\n\s*\};/.exec(response.content)?.[1] || "";
                 sid = /\bsid\s*:\s*["'](\d+)["']/.exec(source)?.[1];
                 ssid = /\bssid\s*:\s*["'](\d+)["']/.exec(source)?.[1];
                 if (!sid || !ssid) throw new Error("YY房間不存在或資料無效");
             }
-            const result = await net.json(`${YY}/api/liveInfoDetail/${sid}/${ssid}/0`, {headers: headers("yy")});
+            const result = await this.net.json(`${YY}/api/liveInfoDetail/${sid}/${ssid}/0`, {headers: headers("yy")});
             if (result.resultCode !== 0) throw new Error("YY詳情回應錯誤");
             if (!result.data?.sid || !result.data.ssid || !result.data.name) throw new Error("YY目前未開播或房間不存在");
             yyCard(result.data);
@@ -370,13 +380,13 @@ export default function() {
         });
     }
 
-    async function yyLiveSource(id) {
-        return net.cached(`stream:yy:${id}`, {ttl: 5000, stale: false}, async () => {
-            const room = await yyRoom(id);
+    async yyLiveSource(id) {
+        return this.net.cached(`stream:yy:${id}`, {ttl: 5000, stale: false}, async () => {
+            const room = await this.yyRoom(id);
             const sid = String(room.sid), ssid = String(room.ssid);
             const stamp = Date.now();
             const version = "5.23.0-beta.2";
-            const result = await net.json("https://stream-manager.yy.com/v3/channel/streams", {
+            const result = await this.net.json("https://stream-manager.yy.com/v3/channel/streams", {
                 method: "POST", postType: "json", params: {uid: 0, cid: sid, sid: ssid, appid: 0, sequence: stamp, encode: "json"},
                 headers: {...headers("yy"), Origin: YY, "Content-Type": "application/json; charset=utf-8"},
                 data: {
@@ -388,12 +398,33 @@ export default function() {
             return {parse: 0, url: yyStreamUrl(result), header: headers("yy"), format: "video/x-flv"};
         });
     }
+}
 
-    return {init, home, homeVod: () => ({list: []}), category, detail, search, play, proxy, danmaku};
+function log(...args) {
+    try {
+        console?.log?.(...args);
+    } catch {}
+}
+
+function uuid() {
+    if (typeof crypto?.randomUUID === "function") return crypto.randomUUID();
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    bytes[6] = bytes[6] & 15 | 64;
+    bytes[8] = bytes[8] & 63 | 128;
+    const hex = Array.from(bytes, value => value.toString(16).padStart(2, "0")).join("");
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 function douyuSuccess(code) {
     return code === 0 || code === "0";
+}
+
+// 原文件调用了 page() 但未定义（原版运行到分类/搜索/YY 列表会 ReferenceError），此处按各调用点语义补齐。
+function page(list, current, limit, total) {
+    const result = {list, page: current, pagecount: total == null ? 1 : Math.max(1, Math.ceil(total / limit)), limit};
+    if (total != null) result.total = total;
+    return result;
 }
 
 function pageNumber(value) {
