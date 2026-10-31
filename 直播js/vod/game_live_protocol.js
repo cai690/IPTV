@@ -1,10 +1,28 @@
+import {net} from "catvod";
+
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 const douyuColors = [0xffffff, 0xff2e2e, 0x00ccff, 0x66ff00, 0xff6600, 0xcc00ff, 0xf6447f];
 const yyEntities = {amp: "&", lt: "<", gt: ">", quot: '"', apos: "'"};
 
+function log(...args) {
+    try {
+        console?.log?.(...args);
+    } catch {}
+}
+
+function uuid() {
+    if (typeof crypto?.randomUUID === "function") return crypto.randomUUID();
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    bytes[6] = bytes[6] & 15 | 64;
+    bytes[8] = bytes[8] & 63 | 128;
+    const hex = Array.from(bytes, value => value.toString(16).padStart(2, "0")).join("");
+    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 export function subscribe(platform, room, emit) {
-    const instance = platform === "yy" ? crypto.randomUUID() : undefined;
+    const instance = platform === "yy" ? uuid() : undefined;
     const url = platform === "douyu" ? "wss://danmuproxy.douyu.com:8506/" : platform === "huya" ? "wss://cdnws.api.huya.com/" : platform === "yy" ? `wss://h5-sinchl.yy.com/websocket?appid=yymwebh5&version=3.2.14&uuid=${instance}` : "";
     if (!url) throw new Error("不支援的彈幕平台");
     let decode;
@@ -100,10 +118,10 @@ export function subscribe(platform, room, emit) {
                 clearDecoder();
                 ready = false;
                 emit({state: "retrying", msg: "彈幕連線中斷，等待恢復"});
-                if (event.error) console.error(`${platform} 彈幕重連：${event.error}`);
+                if (event.error) log(`${platform} 彈幕重連：${event.error}`);
             } else if (event.type === "error" || event.type === "close") {
                 fail(event.error || "彈幕連線已關閉");
-                if (event.type === "error") console.error(`${platform} 彈幕：${event.error}`);
+                if (event.type === "error") log(`${platform} 彈幕：${event.error}`);
             }
         } catch (error) {
             fail(error);
@@ -265,7 +283,7 @@ function yyText(value) {
     return parts.join("");
 }
 
-export function yySession(room, send, onReady, instance = crypto.randomUUID()) {
+export function yySession(room, send, onReady, instance = uuid()) {
     const top = Number(room.top);
     const sub = Number(room.sub);
     if (![top, sub].every(value => Number.isInteger(value) && value > 0 && value <= 0xffffffff)) throw new Error("YY 彈幕房間無效");
